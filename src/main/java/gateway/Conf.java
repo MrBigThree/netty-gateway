@@ -28,7 +28,7 @@ public class Conf {
                 if (port >= 0 && port <= 65535) {
                     values.put(key.toString(), uri);
                 } else {
-                    logger.error("--- Conf ---\n{}", port);
+                    logger.error("--- Conf ---\nuri : {} error", uri);
                 }
             });
         } catch (IOException ignored) {
