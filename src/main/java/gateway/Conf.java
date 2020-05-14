@@ -38,6 +38,19 @@ public class Conf {
 
     }
 
+    private static boolean addConf(String host, String uri) {
+        URI _uri = URI.create(uri);
+        int port = _uri.getPort();
+        if (port >= 0 && port <= 65535) {
+            values.put(host, _uri);
+            logger.info("--- Conf ---\nuri : {} add", uri);
+            return true;
+        } else {
+            logger.error("--- Conf ---\nuri : {} error", uri);
+            return false;
+        }
+    }
+
     public static URI valueOf(String host) {
         return values.get(host);
     }
