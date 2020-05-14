@@ -43,7 +43,7 @@ public class Conf {
         int port = _uri.getPort();
         if (port >= 0 && port <= 65535) {
             values.put(host, _uri);
-            logger.info("--- Conf ---\nuri : {} add", uri);
+            logger.info("--- Conf ---\nadd uri : {}", uri);
             return true;
         } else {
             logger.error("--- Conf ---\nuri : {} error", uri);
