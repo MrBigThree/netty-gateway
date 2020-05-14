@@ -9,7 +9,6 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.SslHandler;
-import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.handler.timeout.IdleStateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +49,8 @@ public class Proxy {
                         ChannelPipeline pipeline = ch.pipeline();
 
                         if (isSsl) {
-                            SslContext sslContext = SslContextBuilder.forClient().build();
+                            SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
+                            SslContext sslContext = sslContextBuilder.build();
                             SSLEngine sslEngine = sslContext.newEngine(ch.alloc());
                             pipeline.addLast(new SslHandler(sslEngine));
                         }
@@ -71,22 +71,25 @@ public class Proxy {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws InterruptedException {
-            logger.info("--- Proxy ---\t{}\n{}", uri, msg);
+
             context.writeAndFlush(msg).sync();
+
+            logger.info("--- Proxy ---\t{}\n{}", uri, msg);
         }
 
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            ctx.close();
-            logger.error("--- Proxy ---\t{}\n", uri, cause);
-        }
-
-        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
-            if (evt instanceof IdleStateEvent) {
-                logger.error("--- Proxy ---\n{} time out", uri);
-                context.close();
-                ctx.close();
-            }
-        }
+//        @Override
+//        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+//            logger.error("--- Proxy ---\t{}\n", uri, cause);
+////            context.close();
+//            ctx.close();
+//        }
+//
+//        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+//            if (evt instanceof IdleStateEvent) {
+//                logger.error("--- Proxy ---\n{} time out", uri);
+//                context.close();
+//                ctx.close();
+//            }
+//        }
     }
 }

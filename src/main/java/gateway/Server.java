@@ -66,6 +66,7 @@ public class Server {
 
         private final Proxy proxy;
         private ChannelFuture future;
+        private URI uri;
 
         private ServerHandler(NioEventLoopGroup group) {
             proxy = new Proxy(group);
@@ -73,27 +74,30 @@ public class Server {
 
         protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
 
-            logger.info("--- Server ---\n{}", msg);
-
             if (msg instanceof HttpRequest) {
                 String host = ((HttpRequest) msg).headers().get("Host");
-                URI uri = Conf.valueOf(host);
+                uri = Conf.valueOf(host);
                 if (uri == null) {
                     DefaultFullHttpResponse not = new DefaultFullHttpResponse(HTTP_1_1, NOT_FOUND);
                     not.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-                                 .set(ACCESS_CONTROL_ALLOW_ORIGIN , "*")
-                                 .set(ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept")
-                                 .set(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT,DELETE");
+                            .set(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
+                            .set(ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept")
+                            .set(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT,DELETE");
                     ctx.writeAndFlush(not);
                     return;
                 }
                 future = proxy.react(ctx, uri);
+                HttpRequest message = (HttpRequest) msg;
+                HttpHeaders headers = message.headers();
+                headers.set("GatewayHost", headers.get("Host"));
+                headers.set("Host", uri.getHost());
             }
+
             future.addListener((ChannelFutureListener) future -> {
-                if (! future.isSuccess()) {
+                if (!future.isSuccess()) {
                     DefaultFullHttpResponse out = new DefaultFullHttpResponse(HTTP_1_1, REQUEST_TIMEOUT);
                     out.headers().set(HttpHeaderNames.CONTENT_TYPE, "text/html; charset=UTF-8")
-                            .set(ACCESS_CONTROL_ALLOW_ORIGIN , "*")
+                            .set(ACCESS_CONTROL_ALLOW_ORIGIN, "*")
                             .set(ACCESS_CONTROL_ALLOW_HEADERS, "Origin, X-Requested-With, Content-Type, Accept")
                             .set(ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT,DELETE");
                     ctx.writeAndFlush(out);
@@ -101,17 +105,19 @@ public class Server {
                     future.channel().writeAndFlush(msg);
                 }
             });
+
+            logger.info("--- Server ---\t{}\n{}", uri, msg);
         }
 
-        @Override
-        public void channelInactive(ChannelHandlerContext ctx) {
-            ctx.close();
-        }
-
-        @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-            ctx.close();
-            logger.error("--- Server ---\n", cause);
-        }
+//        @Override
+//        public void channelInactive(ChannelHandlerContext ctx) {
+//            ctx.close();
+//        }
+//
+//        @Override
+//        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+//            logger.error("--- Server ---\t{}\n", uri, cause);
+//            ctx.close();
+//        }
     }
 }

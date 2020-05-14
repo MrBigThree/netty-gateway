@@ -1,1 +1,3 @@
-gateway.com=http://127.0.0.1:8080
+# gateway.com=https://www.baidu.com:443
+gateway.com=https://www.cnblogs.com:443
+# gateway.com=http://127.0.0.1:8080
