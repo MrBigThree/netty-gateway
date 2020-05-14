@@ -38,14 +38,8 @@ public class Proxy {
 
         String host = this.uri.getHost();
         int port = this.uri.getPort();
+
         boolean isSsl = "https".equalsIgnoreCase(this.uri.getScheme());
-        if (port <= 0 || port >= 65536) {
-            if (isSsl) {
-                port = 443;
-            } else {
-                port = 80;
-            }
-        }
 
         Bootstrap bootstrap = new Bootstrap()
                 .group(this.proxyGroup)
@@ -84,7 +78,7 @@ public class Proxy {
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             ctx.close();
-            logger.error("--- Proxy ---\n", cause);
+            logger.error("--- Proxy ---\t{}\n", uri, cause);
         }
 
         public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {

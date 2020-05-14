@@ -22,7 +22,15 @@ public class Conf {
         try (FileReader fr = new FileReader("conf");
              BufferedReader br = new BufferedReader(fr)) {
             properties.load(br);
-            properties.forEach((key, value) -> values.put(key.toString(), URI.create(value.toString())));
+            properties.forEach((key, value) -> {
+                URI uri = URI.create(value.toString());
+                int port = uri.getPort();
+                if (port >= 0 && port <= 65535) {
+                    values.put(key.toString(), uri);
+                } else {
+                    logger.error("--- Conf ---\n{}", port);
+                }
+            });
         } catch (IOException ignored) {
         }
 
